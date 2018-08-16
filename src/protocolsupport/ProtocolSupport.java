@@ -31,6 +31,8 @@ import protocolsupport.protocol.typeremapper.mapcolor.MapColorRemapper;
 import protocolsupport.protocol.typeremapper.pe.PEDataValues;
 import protocolsupport.protocol.typeremapper.pe.PEPotion;
 import protocolsupport.protocol.typeremapper.pe.PESkinModel;
+import protocolsupport.protocol.typeremapper.pe.inventory.PEInventory;
+import protocolsupport.protocol.typeremapper.pe.inventory.fakes.PEFakeContainer;
 import protocolsupport.protocol.typeremapper.sound.SoundRemapper;
 import protocolsupport.protocol.typeremapper.tileentity.TileNBTRemapper;
 import protocolsupport.protocol.typeremapper.watchedentity.remapper.SpecificRemapper;
@@ -48,6 +50,8 @@ import protocolsupport.utils.Utils;
 import protocolsupport.utils.netty.Allocator;
 import protocolsupport.utils.netty.Compressor;
 import protocolsupport.zplatform.ServerPlatform;
+import protocolsupport.zplatform.impl.pe.PECraftingManager;
+import protocolsupport.zplatform.impl.pe.PECreativeInventory;
 import protocolsupport.zplatform.impl.pe.PEProxyServer;
 import protocolsupport.zplatform.impl.pe.PEProxyServerInfoHandler;
 
@@ -128,6 +132,8 @@ public class ProtocolSupport extends JavaPlugin {
 			Class.forName(PEDataValues.class.getName());
 			Class.forName(PESkinModel.class.getName());
 			Class.forName(PEPotion.class.getName());
+			Class.forName(PEInventory.class.getName());
+			Class.forName(PEFakeContainer.class.getName());
 			ServerPlatform.get().getInjector().onLoad();
 		} catch (Throwable t) {
 			getLogger().log(Level.SEVERE, "Error when loading, make sure you are using supported server version", t);
@@ -144,6 +150,16 @@ public class ProtocolSupport extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new MultiplePassengersRestrict(), this);
 		getServer().getMessenger().registerIncomingPluginChannel(this, InternalPluginMessageRequest.TAG, new InternalPluginMessageRequest());
 		getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
+			Thread pocketPacketCache = new Thread(() -> {
+				PECraftingManager.getInstance().registerRecipes();
+				PECreativeInventory.getInstance().generateCreativeInventoryItems();
+			});
+			pocketPacketCache.setDaemon(true);
+			pocketPacketCache.start();
+			try {
+				pocketPacketCache.join();
+			} catch (InterruptedException e) {
+			}
 			(peserver = new PEProxyServer()).start();
 		});
 	}
@@ -157,8 +173,16 @@ public class ProtocolSupport extends JavaPlugin {
 		}
 	}
 
+	public static void logTrace(String message) {
+		ProtocolSupport.getInstance().getLogger().fine(message);
+	}
+
 	public static void logInfo(String message) {
 		ProtocolSupport.getInstance().getLogger().info(message);
+	}
+
+	public static void logWarning(String message) {
+		ProtocolSupport.getInstance().getLogger().warning(message);
 	}
 
 	public static class BuildInfo {

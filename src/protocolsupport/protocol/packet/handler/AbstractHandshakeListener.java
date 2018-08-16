@@ -7,6 +7,7 @@ import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 
+import protocolsupport.api.ProtocolVersion;
 import protocolsupport.api.events.ConnectionHandshakeEvent;
 import protocolsupport.api.utils.NetworkState;
 import protocolsupport.protocol.ConnectionImpl;
@@ -42,7 +43,11 @@ public abstract class AbstractHandshakeListener {
 				ConnectionImpl connection = ConnectionImpl.getFromChannel(networkManager.getChannel());
 				//version check
 				if (!connection.getVersion().isSupported()) {
-					disconnect(MessageFormat.format(ServerPlatform.get().getMiscUtils().getOutdatedServerMessage().replace("'", "''"), ServerPlatform.get().getMiscUtils().getVersionName()));
+					if (connection.getVersion().equals(ProtocolVersion.MINECRAFT_PE_LEGACY)) {
+						disconnect(MessageFormat.format(ServerPlatform.get().getMiscUtils().getOutdatedClientMessage().replace("'", "''"), ServerPlatform.get().getMiscUtils().getVersionName()));
+					} else {
+						disconnect(MessageFormat.format(ServerPlatform.get().getMiscUtils().getOutdatedServerMessage().replace("'", "''"), ServerPlatform.get().getMiscUtils().getVersionName()));
+					}
 					break;
 				}
 				//ps handshake event

@@ -5,20 +5,26 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import protocolsupport.ProtocolSupport;
 import protocolsupport.api.Connection;
 import protocolsupport.api.ProtocolSupportAPI;
+import protocolsupport.protocol.packet.middleimpl.clientbound.play.v_pe.InventoryOpen;
 import protocolsupport.protocol.serializer.MiscSerializer;
 import protocolsupport.protocol.serializer.PositionSerializer;
 import protocolsupport.protocol.serializer.StringSerializer;
 import protocolsupport.protocol.utils.ProtocolVersionsHelper;
 import protocolsupport.protocol.utils.minecraftdata.MinecraftData;
 import protocolsupport.protocol.utils.types.Position;
+import protocolsupport.protocol.utils.types.WindowType;
 import protocolsupport.utils.netty.Allocator;
 import protocolsupport.zplatform.ServerPlatform;
 import protocolsupportbuildprocessor.annotations.NeedsNoArgConstructor;
@@ -41,15 +47,37 @@ public class InternalPluginMessageRequest implements PluginMessageListener {
 
 	static {
 		register(ChunkUpdateRequest.class, (connection, request) -> {
-			connection.sendPacket(ServerPlatform.get().getPacketFactory().createUpdateChunkPacket(
-					connection.getPlayer().getWorld().getChunkAt(request.getChunkX(), request.getChunkZ()))
-			);
+			Bukkit.getScheduler().runTask(ProtocolSupport.getInstance(), () -> {
+				Chunk chunk = connection.getPlayer().getWorld().getChunkAt(request.getChunkX(), request.getChunkZ());
+				if (chunk.isLoaded()) {
+					connection.sendPacket(ServerPlatform.get().getPacketFactory().createUpdateChunkPacket(
+							connection.getPlayer().getWorld().getChunkAt(request.getChunkX(), request.getChunkZ()))
+					);
+				}
+			});
 		});
 		register(BlockUpdateRequest.class, (connection, request) -> {
-			Block block = request.getPosition().toBukkit(connection.getPlayer().getWorld()).getBlock();
-			connection.sendPacket(ServerPlatform.get().getPacketFactory().createBlockUpdatePacket(
-					request.getPosition(), MinecraftData.getBlockStateFromIdAndData(block.getTypeId(), block.getData()))
-			);
+			Bukkit.getScheduler().runTask(ProtocolSupport.getInstance(), () -> {
+				Location place = request.getPosition().toBukkit(connection.getPlayer().getWorld());
+				if (place.getChunk().isLoaded()) {
+					Block block = place.getBlock();
+					connection.sendPacket(ServerPlatform.get().getPacketFactory().createBlockUpdatePacket(
+							request.getPosition(), MinecraftData.getBlockStateFromIdAndData(block.getTypeId(), block.getData()))
+					);
+				}
+			});
+		});
+		register(InventoryOpenRequest.class, (connection, request) -> {
+			Bukkit.getScheduler().runTaskLater(ProtocolSupport.getInstance(), () -> {
+				InventoryOpen.sendInventoryOpen(connection, request.getWindowId(), request.getType(), request.getPosition(), request.getHorseId());
+				connection.getPlayer().updateInventory();
+			}, request.getDelayTicks());
+		});
+		register(InventoryUpdateRequest.class, (connection, request) -> {
+			Bukkit.getScheduler().runTaskLater(ProtocolSupport.getInstance(), () -> {
+					connection.getPlayer().updateInventory();
+					connection.getPlayer().setItemOnCursor(connection.getPlayer().getItemOnCursor());
+			}, request.getDelayTicks());
 		});
 	}
 
@@ -122,6 +150,94 @@ public class InternalPluginMessageRequest implements PluginMessageListener {
 
 		public Position getPosition() {
 			return position;
+		}
+
+	}
+
+	public static class InventoryOpenRequest extends PluginMessageData {
+
+		protected int windowId;
+		protected WindowType type;
+		protected Position position;
+		protected int horseId;
+		protected int delayTicks;
+
+		public InventoryOpenRequest() {
+			this(0, WindowType.PLAYER, new Position(0,0,0), 0, 0);
+		}
+
+		public InventoryOpenRequest(int windowId, WindowType type, Position position, int horseId, int delayTicks) {
+			this.windowId = windowId;
+			this.type = type;
+			this.position = position;
+			this.horseId = horseId;
+			this.delayTicks = delayTicks;
+		}
+
+		@Override
+		protected void read(ByteBuf from) {
+			windowId = from.readInt();
+			type = WindowType.getById(StringSerializer.readString(from, ProtocolVersionsHelper.LATEST_PC));
+			PositionSerializer.readPositionTo(from, position);
+			horseId = from.readInt();
+			delayTicks = from.readInt();
+		}
+
+		@Override
+		protected void write(ByteBuf to) {
+			to.writeInt(windowId);
+			StringSerializer.writeString(to, ProtocolVersionsHelper.LATEST_PC, type.getId());
+			PositionSerializer.writePosition(to, position);
+			to.writeInt(horseId);
+			to.writeInt(delayTicks);
+		}
+
+		public int getWindowId() {
+			return windowId;
+		}
+
+		public WindowType getType() {
+			return type;
+		}
+
+		public Position getPosition() {
+			return position;
+		}
+
+		public int getHorseId() {
+			return horseId;
+		}
+
+		public int getDelayTicks() {
+			return delayTicks;
+		}
+
+	}
+
+	public static class InventoryUpdateRequest extends PluginMessageData {
+
+		protected int delayTicks;
+
+		public InventoryUpdateRequest() {
+			this(0);
+		}
+
+		public InventoryUpdateRequest(int delayTicks) {
+			this.delayTicks = delayTicks;
+		}
+
+		@Override
+		protected void read(ByteBuf from) {
+			this.delayTicks = from.readInt();
+		}
+
+		@Override
+		protected void write(ByteBuf to) {
+			to.writeInt(delayTicks);
+		}
+
+		public int getDelayTicks() {
+			return delayTicks;
 		}
 
 	}
