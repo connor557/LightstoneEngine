@@ -46,7 +46,7 @@ public class PositionLook extends ServerBoundMiddlePacket {
 		RecyclableArrayList<ServerBoundPacketData> packets = RecyclableArrayList.create();
 		MovementCache movecache = cache.getMovementCache();
 		NetworkEntity player = cache.getWatchedEntityCache().getSelfPlayer();
-		movecache.updatePEPositionLeniency(y);
+		//movecache.updatePEPositionLeniency(y);
 		movecache.setPEClientPosition(x, y, z);
 		//PE doesn't send a movement confirm after position set, so we just confirm teleport straight away
 		int teleportId = movecache.teleportConfirm();
