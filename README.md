@@ -22,4 +22,4 @@ Known wontfix issues:
 
 Code licensed under the terms of GNU AGPLv3
 </br>
-Ready to deploy binaries are NOT FREE, contact connor557 for EULA and fees.
+Ready to deploy binaries are distributed with a custom init.d script and must be compiled to meet the needs of each server are NOT FREE, contact connor557 for EULA and fees. We can also custom-design a solution to meet the needs of large networks for a discount.
