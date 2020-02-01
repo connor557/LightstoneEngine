@@ -21,4 +21,5 @@ Known wontfix issues:
 ---
 
 Code licensed under the terms of GNU AGPLv3
+</br>
 Ready to deploy binaries are NOT FREE, contact connor557 for EULA and fees.
