@@ -5,8 +5,8 @@ Lightstone Engine (ProtocolSupport At-Heart)
 Important notes:
 * Only latest version of this plugin is supported
 * This plugin can't be reloaded or not loaded at server startup
-* This plugin doesn't work with netty native transport
-* Online mode must be set to false (This is a bug, not a feature)
+* This plugin doesn't work with jetty/netty native transport
+* Online mode must be set to false (This is a bug, not a feature and should be fixed in next major release)
 
 Known issues:
 * [Anything that is not latest] Items in creative mode may not work as expected, or may not work at all
