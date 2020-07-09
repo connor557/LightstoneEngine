@@ -1,11 +1,12 @@
-name: ProtocolSupport
+name: LightstoneEngine
 main: protocolsupport.ProtocolSupport
-version: 4.29-dev-pe
+version: mcpe-latest-july2020
 authors:
 - _Shevchik_
 - 7kasper
 - MrPowerGamerBR
 - gdude2002
+- connor557
 load: STARTUP
 commands:
   protocolsupport:
