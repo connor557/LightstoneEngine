@@ -11,5 +11,5 @@ load: STARTUP
 commands:
   protocolsupport:
     description: All ProtocolSupport commands
-    aliases: ps
-    usage: '/protocolsupport help'
+    aliases: pls
+    usage: '/lightstone help'
