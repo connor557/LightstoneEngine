@@ -45,19 +45,15 @@ dlDepsDirS.mkdirs()
 
 def dlDepsC = [
 	new Tuple(
-		'https://yivesmirror.com/files/paperspigot/PaperSpigot-1.12.2-b1421.jar',
-		'spigot-1.12.2-2.jar'
-	),
-	new Tuple(
-		'https://github.com/GlowstoneMC/Glowstone/releases/download/2018.6.0/glowstone.jar',
-		'glowstone-1.12.2-2.jar'
+		'https://yivesmirror.com/api/file/paper/Paper-1.16.1-latest.jar',
+		'Paper-1.16.1-latest.jar'
 	)
 ]
 
 def dlDepsS = [
 	new Tuple(
-		'https://build.true-games.org/job/RakNetServer/27/artifact/target/RakNetServer.jar',
-		'raknetserver-7.jar'
+		'https://build.true-games.org/job/RakNetServer/lastSuccessfulBuild/artifact/target/RakNetServer.jar',
+		'raknetserver.jar'
 	),
 	new Tuple(
 		'https://build.true-games.org/job/UdpServerSocketChannel/11/artifact/target/UdpServerSocketChannel.jar',
